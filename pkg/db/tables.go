@@ -8,14 +8,14 @@ type Study struct {
 }
 
 type StudyDirection struct {
-	ID        uint   `gorm:"primaryKey column:study_direction_id"`
+	ID        uint   `gorm:"column:study_direction_id"`
 	StudyID   uint   `gorm:"column:study_id"`
 	Direction string `gorm:"column:direction"`
 	Objective uint
 }
 
 type Trial struct {
-	ID       uint `gorm:"primaryKey column:trial_id"`
+	ID       uint `gorm:"column:trial_id"`
 	StudyID  uint `gorm:"column:study_id"`
 	Number   uint
 	State    string

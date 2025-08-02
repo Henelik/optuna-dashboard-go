@@ -1,24 +1,39 @@
 package ui
 
-import "github.com/davecgh/go-spew/spew"
 import "github.com/Henelik/optuna-dashboard-go/pkg/db"
+import "log"
 
 templ dashboard() {
     @header("Optuna Dashboard")
 
     <body>
-        {{ 
-            studies := []db.Study{}
-            DB.Find(&studies)
+        <div class="container">
+            {{ 
+                studies := []db.Study{}
+                if err := DB.Find(&studies).Error; err != nil {
+                    log.Printf("Error fetching studies: %s", err.Error())
+                }
+            }}
 
-            studyDirections := []db.StudyDirection{}
-            DB.Find(&studyDirections)
+            for _, study := range studies {
+                {{
+                    studyDirections := []db.StudyDirection{}
+                    DB.Where("study_id = ?", study.ID).Find(&studyDirections)
+                }}
 
-            trials := []db.Trial{}
-            DB.Find(&trials)
-        }}
-        { spew.Sdump(studies) }
-        { spew.Sdump(studyDirections) }
-        { spew.Sdump(trials) }
+                @studyCard(study, studyDirections)
+            }
+        </div>
     </body>
+}
+
+templ studyCard(study db.Study, studyDirections []db.StudyDirection) {
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{ study.ID }. { study.Name }</h5>
+            for _, d := range studyDirections {
+                <p class="card-text">Objective { d.Objective } direction: { d.Direction }</p>
+            }
+        </div>
+    </div>
 }

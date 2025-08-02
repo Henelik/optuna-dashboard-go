@@ -4,7 +4,10 @@ import (
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"gorm.io/gorm"
 )
+
+var DB *gorm.DB
 
 func SetupUIHandlers(app *fiber.App) {
 	app.Get("/", templAdaptor(dashboard))

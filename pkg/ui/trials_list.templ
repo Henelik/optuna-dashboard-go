@@ -14,7 +14,7 @@ templ trialsListPage(studyID uint) {
         }
     }}
 
-    @header("Trials for study " + strconv.FormatUint(uint64(studyID), 10))
+    @header("Trials for study " + strconv.Itoa(int(studyID)))
 
     <body>
         <div class="container">
@@ -37,8 +37,8 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue) {
         </thead>
         <tbody>
             for _, trial := range trials {
-                <tr id={"trial-" + strconv.Itoa(int(trial.Number))}>
-                    <td>{strconv.FormatUint(uint64(trial.Number), 10)}</td>
+                <tr id={strconv.Itoa(int(trial.Number))}>
+                    <td>{strconv.Itoa(int(trial.Number))}</td>
                     <td>{trial.State}</td>
                     <td>
                         for _, tv := range trialValues {

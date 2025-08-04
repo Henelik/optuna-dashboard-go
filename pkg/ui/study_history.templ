@@ -72,7 +72,7 @@ func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.Tr
             event.Listener{
                 EventName: "click",
                 Handler: types.FuncStr(
-                    fmt.Sprintf(`(params) => window.location.href="/study/%d/trials#trial-"+params.dataIndex`, studyID),
+                    fmt.Sprintf(`(params) => window.location.href="/study/%d/trials#"+params.dataIndex`, studyID),
                 ),
             },
         ),

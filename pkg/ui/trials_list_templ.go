@@ -40,7 +40,7 @@ func trialsListPage(studyID uint) templ.Component {
 		if err != nil {
 			return err
 		}
-		templ_7745c5c3_Err = header("Trials for study "+strconv.FormatUint(uint64(studyID), 10)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = header("Trials for study "+strconv.Itoa(int(studyID))).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -104,9 +104,9 @@ func trialsList(trials []db.Trial, trialValues []db.TrialValue) templ.Component 
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("trial-" + strconv.Itoa(int(trial.Number)))
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(int(trial.Number)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 40, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 40, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -117,9 +117,9 @@ func trialsList(trials []db.Trial, trialValues []db.TrialValue) templ.Component 
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatUint(uint64(trial.Number), 10))
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(int(trial.Number)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 41, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 41, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

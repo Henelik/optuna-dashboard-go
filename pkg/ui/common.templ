@@ -1,6 +1,10 @@
 package ui
 
 import (
+    "strings"
+    "encoding/json"
+    "log"
+
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
 
@@ -11,7 +15,66 @@ templ header(title string) {
         <title>{ title }</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+        <script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
+        <script src="https://go-echarts.github.io/go-echarts-assets/assets/themes/westeros.js"></script>
     </head>
+}
+
+templ homeButton() {
+    <a href="/" class="btn btn-primary mt-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-house-door-fill" viewBox="0 0 16 16">
+            <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/>
+        </svg>
+    </a>
+}
+
+templ clipboardItem(item any, buttonText string, classOptions ...string) {
+    {{
+        var data string
+
+        switch v := item.(type) {
+        case string:
+            data = v
+        default:
+            bytes, err := json.Marshal(item)
+            if err != nil {
+                log.Printf("Error marshalling item: %s", err.Error())
+            }
+
+            data = string(bytes)
+        }
+    }}
+
+    <div class={ strings.Join(append(classOptions, "mb-3"), " ") }>
+        <input id="copy-text" type="text" class="form-control" value={ data } readonly hidden>
+        <button class="btn btn-outline-secondary" type="button" id="copy-button">{ buttonText }</button>
+        <style>
+            @keyframes copyFeedback {
+                0% { background-color: var(--bs-btn-bg); }
+                25% { background-color: #28a745; }
+                75% { background-color: #28a745; }
+                100% { background-color: var(--bs-btn-bg); }
+            }
+            .copy-animation {
+                animation: copyFeedback 0.5s ease-in-out;
+            }
+        </style>
+        <script>
+            document.getElementById("copy-button").addEventListener("click", function() {
+                var copyText = document.getElementById("copy-text");
+                copyText.select();
+                navigator.clipboard.writeText(copyText.value);
+
+                // Add animation class
+                this.classList.add("copy-animation");
+
+                // Remove the class after animation completes
+                setTimeout(() => {
+                    this.classList.remove("copy-animation");
+                }, 500);
+            });
+        </script>
+    </div>
 }
 
 func getStudyTrials(studyID uint) ([]db.Trial, []db.TrialValue, error) {
@@ -33,4 +96,10 @@ func getStudyTrials(studyID uint) ([]db.Trial, []db.TrialValue, error) {
     err := db.DB.Where("trial_id IN ?", trialIDs).Find(&trialValues).Error
 
     return trials, trialValues, err
+}
+
+func getStudy(studyID uint) (*db.Study, error) {
+    study := &db.Study{}
+    err := db.DB.Where("study_id = ?", studyID).First(&study).Error
+    return study, err
 }

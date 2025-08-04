@@ -2,11 +2,11 @@ package ui
 
 import (
     "fmt"
-    "bytes"
+    "strings"
     "strconv"
+
     "github.com/go-echarts/go-echarts/v2/charts"
     "github.com/go-echarts/go-echarts/v2/opts"
-    "github.com/go-echarts/go-echarts/v2/components"
     "github.com/go-echarts/go-echarts/v2/types"
 
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
@@ -60,14 +60,6 @@ func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.Tr
         charts.WithInitializationOpts(opts.Initialization{
             Theme: types.ThemeWesteros,
         }),
-        charts.WithXAxisOpts(opts.XAxis{
-            Name: "Trial Number",
-            Type: "category",
-        }),
-        charts.WithYAxisOpts(opts.YAxis{
-            Name: "Objective Value",
-            Type: "value",
-        }),
         charts.WithEventListeners(
             event.Listener{
                 EventName: "click",
@@ -81,26 +73,24 @@ func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.Tr
     // Add data to chart
     scatter.SetXAxis(xAxisStr).
         AddSeries("Objective Value", data)
+
+    // render the snippet
+    chartSnippet := scatter.RenderSnippet()
+    elementID := strings.Split(chartSnippet.Element, `"`)[5]
+
+    element := fmt.Sprintf(
+    `<div class="container border border-dark rounded mt-4">
+        <div class="item m-3" id="%s" style="height:700px;"></div>
+    </div>`, elementID)
     
-    // Render the chart to a buffer
-    buf := new(bytes.Buffer)
-    page := components.NewPage()
-    page.AddCharts(scatter)
-    err := page.Render(buf)
-    if err != nil {
-        return "", err
-    }
-    
-    return buf.String(), nil
+    return element + chartSnippet.Script, nil
 }
 
 templ studyHistory(studyID uint) {
     @header("Study History")
     <div class="container mt-4">
-        <div>
-            <h1>Study History - ID: {strconv.FormatUint(uint64(studyID), 10)}</h1>
-        </div>
-        <p></p>
+        @homeButton()
+        <h1>Study History - ID: {strconv.FormatUint(uint64(studyID), 10)}</h1>
         <div id="scatter-container" class="mt-4">
             {{
                 trials, trialValues, err := getStudyTrials(studyID)
@@ -113,12 +103,21 @@ templ studyHistory(studyID uint) {
     </div>
 }
 
+templ trialScatterplotWithLookup(studyID uint) {
+    {{
+        trials, trialValues, err := getStudyTrials(studyID)
+        if err != nil {
+            return err
+        }
+    }}
+
+    @trialScatterplot(studyID, trials, trialValues)
+}
+
 templ trialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) {
     if len(trials) > 0 {
         if chartHTML, err := createTrialScatterplot(studyID, trials, trialValues); err == nil {
-            <div id="trial-scatter-chart">
-                @templ.Raw(chartHTML)
-            </div>
+            @templ.Raw(chartHTML)
         } else {
             <div class="alert alert-danger">
                 Failed to generate chart: {err.Error()}

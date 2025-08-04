@@ -1,0 +1,99 @@
+package ui
+
+import (
+    "strconv"
+    "errors"
+
+    "github.com/Henelik/optuna-dashboard-go/pkg/db"
+	"encoding/json"
+)
+
+templ studySummaryPage(studyID uint) {
+    @header("Study Summary")
+
+    <div class="container">
+        {{
+            // get the study
+            study, err := getStudy(studyID)
+            if err != nil {
+                return err
+            }
+
+            // get the study direction
+            studyDirection := &db.StudyDirection{}
+            if err := db.DB.Where("study_id = ?", studyID).First(studyDirection).Error; err != nil {
+                return err
+            }
+
+            bestTrial, err := db.GetBestTrial(studyID)
+            if err != nil {
+                return err
+            }
+        }}
+
+        @homeButton()
+        <h2 class="mt-4">{ study.Name }</h2>
+        <p>Direction: { studyDirection.Direction }</p>
+        <div class="mt-4 border border-secondary rounded p-4">
+            <h3>Best trial: { bestTrial.Trial.Number }</h3>
+            <p>Value: { bestTrial.TrialValue.Value }</p>
+            @bestTrialParamsTable(bestTrial.TrialParams)
+        </div>
+        @trialScatterplotWithLookup(studyID)
+    </div>
+}
+
+templ bestTrialParamsTable(params []db.TrialParam) {
+    {{
+        paramsMap := make(map[string]any, len(params))
+        for _, param := range params {
+            distribution := db.Distribution{}
+            if err := json.Unmarshal(param.DistributionJSON, &distribution); err != nil {
+                return err
+            }
+
+            switch {
+            case distribution.Attributes.Step != nil && *distribution.Attributes.Step == 1:
+                // int
+                var err error
+                paramsMap[param.Name], err = strconv.Atoi(param.Value)
+                if err != nil {
+                    return errors.Join(err, errors.New("failed to convert int param value to int"))
+                }
+            case distribution.Attributes.Low != nil && distribution.Attributes.High != nil:
+                // float
+                var err error
+                paramsMap[param.Name], err = strconv.ParseFloat(param.Value, 64)
+                if err != nil {
+                    return errors.Join(err, errors.New("failed to convert float param value to float"))
+                }
+            case distribution.Attributes.Choices != nil:
+                // categorical
+                index, err := strconv.Atoi(param.Value)
+                if err != nil {
+                    return errors.Join(err, errors.New("failed to convert categorical param value to int"))
+                }
+
+                paramsMap[param.Name] = distribution.Attributes.Choices[index]
+            }
+        }
+    }}
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+               <th>Param Name</th>
+               <th>Param Value</th>
+               @clipboardItem(paramsMap, "Copy params JSON", "me-auto")
+            </tr>
+        </thead>
+        <tbody>
+            for _, param := range params {
+                <tr>
+                   <td>{ param.Name }</td>
+                   <td>{ param.Value }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

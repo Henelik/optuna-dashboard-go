@@ -18,8 +18,11 @@ templ trialsListPage(studyID uint) {
 
     <body>
         <div class="container">
-            <h2>Trials for study { studyID }</h2>
-            @trialsList(trials, trialValues)
+            @homeButton()
+            <div class="container mt-4">
+                <h2>Trials for study { studyID }</h2>
+                @trialsList(trials, trialValues)
+            </div>
         </div>
     </body>
 }

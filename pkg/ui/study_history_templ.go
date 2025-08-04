@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -17,10 +18,11 @@ import (
 	"strconv"
 
 	"github.com/Henelik/optuna-dashboard-go/pkg/db"
+	"github.com/go-echarts/go-echarts/v2/event"
 )
 
 // createTrialScatterplot generates a scatterplot of trial objective values
-func createTrialScatterplot(trials []db.Trial, trialValues []db.TrialValue) (string, error) {
+func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) (string, error) {
 	// Create a new scatter instance
 	scatter := charts.NewScatter()
 
@@ -74,6 +76,14 @@ func createTrialScatterplot(trials []db.Trial, trialValues []db.TrialValue) (str
 			Name: "Objective Value",
 			Type: "value",
 		}),
+		charts.WithEventListeners(
+			event.Listener{
+				EventName: "click",
+				Handler: types.FuncStr(
+					fmt.Sprintf(`(params) => window.location.href = "/study/%d/trials#trial-"+params.dataIndex`, studyID),
+				),
+			},
+		),
 	)
 
 	// Add data to chart
@@ -124,7 +134,7 @@ func studyHistory(studyID uint) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatUint(uint64(studyID), 10))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/study_history.templ`, Line: 91, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/study_history.templ`, Line: 101, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -139,7 +149,7 @@ func studyHistory(studyID uint) templ.Component {
 		if err != nil {
 			return err
 		}
-		templ_7745c5c3_Err = trialScatterplot(trials, trialValues).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = trialScatterplot(studyID, trials, trialValues).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,7 +161,7 @@ func studyHistory(studyID uint) templ.Component {
 	})
 }
 
-func trialScatterplot(trials []db.Trial, trialValues []db.TrialValue) templ.Component {
+func trialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -173,7 +183,7 @@ func trialScatterplot(trials []db.Trial, trialValues []db.TrialValue) templ.Comp
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(trials) > 0 {
-			if chartHTML, err := createTrialScatterplot(trials, trialValues); err == nil {
+			if chartHTML, err := createTrialScatterplot(studyID, trials, trialValues); err == nil {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"trial-scatter-chart\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -194,7 +204,7 @@ func trialScatterplot(trials []db.Trial, trialValues []db.TrialValue) templ.Comp
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(err.Error())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/study_history.templ`, Line: 114, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/study_history.templ`, Line: 124, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {

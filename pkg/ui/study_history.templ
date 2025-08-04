@@ -1,6 +1,7 @@
 package ui
 
 import (
+    "fmt"
     "bytes"
     "strconv"
     "github.com/go-echarts/go-echarts/v2/charts"
@@ -9,10 +10,11 @@ import (
     "github.com/go-echarts/go-echarts/v2/types"
 
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
+	"github.com/go-echarts/go-echarts/v2/event"
 )
 
 // createTrialScatterplot generates a scatterplot of trial objective values
-func createTrialScatterplot(trials []db.Trial, trialValues []db.TrialValue) (string, error) {
+func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) (string, error) {
     // Create a new scatter instance
     scatter := charts.NewScatter()
     
@@ -66,6 +68,14 @@ func createTrialScatterplot(trials []db.Trial, trialValues []db.TrialValue) (str
             Name: "Objective Value",
             Type: "value",
         }),
+        charts.WithEventListeners(
+            event.Listener{
+                EventName: "click",
+                Handler: types.FuncStr(
+                    fmt.Sprintf(`(params) => window.location.href="/study/%d/trials#trial-"+params.dataIndex`, studyID),
+                ),
+            },
+        ),
     )
     
     // Add data to chart
@@ -98,14 +108,14 @@ templ studyHistory(studyID uint) {
                     return err
                 }
             }}
-            @trialScatterplot(trials, trialValues)
+            @trialScatterplot(studyID, trials, trialValues)
         </div>
     </div>
 }
 
-templ trialScatterplot(trials []db.Trial, trialValues []db.TrialValue) {
+templ trialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) {
     if len(trials) > 0 {
-        if chartHTML, err := createTrialScatterplot(trials, trialValues); err == nil {
+        if chartHTML, err := createTrialScatterplot(studyID, trials, trialValues); err == nil {
             <div id="trial-scatter-chart">
                 @templ.Raw(chartHTML)
             </div>

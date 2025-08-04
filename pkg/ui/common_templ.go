@@ -8,6 +8,10 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import (
+	"github.com/Henelik/optuna-dashboard-go/pkg/db"
+)
+
 func header(title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -36,7 +40,7 @@ func header(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 7, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 11, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -48,6 +52,27 @@ func header(title string) templ.Component {
 		}
 		return nil
 	})
+}
+
+func getStudyTrials(studyID uint) ([]db.Trial, []db.TrialValue, error) {
+	trials := []db.Trial{}
+	trialValues := []db.TrialValue{}
+
+	if err := db.DB.Where("study_id = ?", studyID).
+		Order("number ASC").
+		Find(&trials).Error; err != nil {
+
+		return nil, nil, err
+	}
+
+	trialIDs := make([]uint, len(trials))
+	for i, trial := range trials {
+		trialIDs[i] = trial.ID
+	}
+
+	err := db.DB.Where("trial_id IN ?", trialIDs).Find(&trialValues).Error
+
+	return trials, trialValues, err
 }
 
 var _ = templruntime.GeneratedTemplate

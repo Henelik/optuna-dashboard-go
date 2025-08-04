@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"github.com/Henelik/optuna-dashboard-go/pkg/ui"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -16,12 +17,12 @@ func main() {
 		log.Fatalf("Error loading .env file: %s", err.Error())
 	}
 
-	db, err := gorm.Open(postgres.Open(os.Getenv("OPTUNA_DB")), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(os.Getenv("OPTUNA_DB")), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
 
-	ui.DB = db
+	db.DB = database
 
 	app := fiber.New()
 

@@ -4,7 +4,7 @@ go 1.24.4
 
 require (
 	github.com/a-h/templ v0.3.924
-	github.com/davecgh/go-spew v1.1.1
+	github.com/go-echarts/go-echarts/v2 v2.6.1
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.6.0

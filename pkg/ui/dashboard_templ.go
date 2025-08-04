@@ -8,7 +8,6 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// import "github.com/davecgh/go-spew/spew"
 import "github.com/Henelik/optuna-dashboard-go/pkg/db"
 import "log"
 
@@ -43,13 +42,13 @@ func dashboard() templ.Component {
 		}
 
 		studies := []db.Study{}
-		if err := DB.Find(&studies).Error; err != nil {
+		if err := db.DB.Find(&studies).Error; err != nil {
 			log.Printf("Error fetching studies: %s", err.Error())
 		}
 		for _, study := range studies {
 
 			studyDirections := []db.StudyDirection{}
-			DB.Where("study_id = ?", study.ID).Find(&studyDirections)
+			db.DB.Where("study_id = ?", study.ID).Find(&studyDirections)
 			templ_7745c5c3_Err = studyCard(study, studyDirections).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -91,7 +90,7 @@ func studyCard(study db.Study, studyDirections []db.StudyDirection) templ.Compon
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(study.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 34, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 33, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -104,7 +103,7 @@ func studyCard(study db.Study, studyDirections []db.StudyDirection) templ.Compon
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(study.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 34, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 33, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -122,7 +121,7 @@ func studyCard(study db.Study, studyDirections []db.StudyDirection) templ.Compon
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(d.Objective)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 36, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 35, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -135,7 +134,7 @@ func studyCard(study db.Study, studyDirections []db.StudyDirection) templ.Compon
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(d.Direction)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 36, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/dashboard.templ`, Line: 35, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {

@@ -1,0 +1,56 @@
+package ui
+
+import (
+    "strconv"
+
+    "github.com/Henelik/optuna-dashboard-go/pkg/db"
+)
+
+templ trialsListPage(studyID uint) {
+    {{
+        trials, trialValues, err := getStudyTrials(studyID)
+        if err != nil {
+            return err
+        }
+    }}
+
+    @header("Trials for study " + strconv.FormatUint(uint64(studyID), 10))
+
+    <body>
+        <div class="container">
+            <h2>Trials for study { studyID }</h2>
+            @trialsList(trials, trialValues)
+        </div>
+    </body>
+}
+
+templ trialsList(trials []db.Trial, trialValues []db.TrialValue) {
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Trial Number</th>
+                <th>State</th>
+                <th>Objective Value</th>
+                <th>Started</th>
+                <th>Completed</th>
+            </tr>
+        </thead>
+        <tbody>
+            for _, trial := range trials {
+                <tr id={"trial-" + strconv.Itoa(int(trial.Number))}>
+                    <td>{strconv.FormatUint(uint64(trial.Number), 10)}</td>
+                    <td>{trial.State}</td>
+                    <td>
+                        for _, tv := range trialValues {
+                            if tv.TrialID == trial.ID {
+                                {strconv.FormatFloat(tv.Value, 'f', 6, 64)}
+                            }
+                        }
+                    </td>
+                    <td>{trial.Start.Format("2006-01-02 15:04:05")}</td>
+                    <td>{trial.Complete.Format("2006-01-02 15:04:05")}</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

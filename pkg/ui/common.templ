@@ -1,5 +1,9 @@
 package ui
 
+import (
+    "github.com/Henelik/optuna-dashboard-go/pkg/db"
+)
+
 templ header(title string) {
     <head>
         <meta charset="UTF-8">
@@ -8,4 +12,25 @@ templ header(title string) {
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
     </head>
+}
+
+func getStudyTrials(studyID uint) ([]db.Trial, []db.TrialValue, error) {
+    trials := []db.Trial{}
+    trialValues := []db.TrialValue{}
+
+    if err := db.DB.Where("study_id = ?", studyID).
+        Order("number ASC").
+        Find(&trials).Error; err != nil {
+
+        return nil, nil, err
+    }
+
+    trialIDs := make([]uint, len(trials))
+    for i, trial := range trials {
+        trialIDs[i] = trial.ID
+    }
+    
+    err := db.DB.Where("trial_id IN ?", trialIDs).Find(&trialValues).Error
+
+    return trials, trialValues, err
 }

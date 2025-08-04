@@ -10,7 +10,7 @@ templ dashboard() {
         <div class="container">
             {{ 
                 studies := []db.Study{}
-                if err := DB.Find(&studies).Error; err != nil {
+                if err := db.DB.Find(&studies).Error; err != nil {
                     log.Printf("Error fetching studies: %s", err.Error())
                 }
             }}
@@ -18,7 +18,7 @@ templ dashboard() {
             for _, study := range studies {
                 {{
                     studyDirections := []db.StudyDirection{}
-                    DB.Where("study_id = ?", study.ID).Find(&studyDirections)
+                    db.DB.Where("study_id = ?", study.ID).Find(&studyDirections)
                 }}
 
                 @studyCard(study, studyDirections)

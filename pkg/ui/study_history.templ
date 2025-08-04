@@ -1,0 +1,122 @@
+package ui
+
+import (
+    "bytes"
+    "strconv"
+    "github.com/go-echarts/go-echarts/v2/charts"
+    "github.com/go-echarts/go-echarts/v2/opts"
+    "github.com/go-echarts/go-echarts/v2/components"
+    "github.com/go-echarts/go-echarts/v2/types"
+
+    "github.com/Henelik/optuna-dashboard-go/pkg/db"
+)
+
+// createTrialScatterplot generates a scatterplot of trial objective values
+func createTrialScatterplot(trials []db.Trial, trialValues []db.TrialValue) (string, error) {
+    // Create a new scatter instance
+    scatter := charts.NewScatter()
+    
+    // Group trial values by trial number
+    trialValueMap := make(map[uint]float64)
+    for _, tv := range trialValues {
+        trialValueMap[tv.TrialID] = tv.Value
+    }
+    
+    // Prepare data for the scatter plot
+    xAxis := make([]uint, len(trials))
+    data := make([]opts.ScatterData, len(trials))
+    
+    for i, trial := range trials {
+        if val, ok := trialValueMap[trial.ID]; ok {
+            xAxis[i] = trial.Number
+            data[i] = opts.ScatterData{
+                Value:        val,
+                SymbolSize:   3,
+                Name:         "Trial " + strconv.Itoa(int(trial.Number)),
+            }
+        }
+    }
+    
+    // Convert xAxis to string for the chart
+    xAxisStr := make([]string, len(xAxis))
+    for i, x := range xAxis {
+        xAxisStr[i] = strconv.Itoa(int(x))
+    }
+    
+    // Set chart options
+    scatter.SetGlobalOptions(
+        charts.WithTitleOpts(opts.Title{
+            Title:    "Trial Objective Values",
+            Subtitle: "Objective value for each trial",
+        }),
+        charts.WithTooltipOpts(opts.Tooltip{
+            Show:    opts.Bool(true),
+            Trigger: "item",
+            TriggerOn: "mousemove|click",
+            Formatter: "{a} <br/>{b}: {c}",
+        }),
+        charts.WithInitializationOpts(opts.Initialization{
+            Theme: types.ThemeWesteros,
+        }),
+        charts.WithXAxisOpts(opts.XAxis{
+            Name: "Trial Number",
+            Type: "category",
+        }),
+        charts.WithYAxisOpts(opts.YAxis{
+            Name: "Objective Value",
+            Type: "value",
+        }),
+    )
+    
+    // Add data to chart
+    scatter.SetXAxis(xAxisStr).
+        AddSeries("Objective Value", data)
+    
+    // Render the chart to a buffer
+    buf := new(bytes.Buffer)
+    page := components.NewPage()
+    page.AddCharts(scatter)
+    err := page.Render(buf)
+    if err != nil {
+        return "", err
+    }
+    
+    return buf.String(), nil
+}
+
+templ studyHistory(studyID uint) {
+    @header("Study History")
+    <div class="container mt-4">
+        <div>
+            <h1>Study History - ID: {strconv.FormatUint(uint64(studyID), 10)}</h1>
+        </div>
+        <p></p>
+        <div id="scatter-container" class="mt-4">
+            {{
+                trials, trialValues, err := getStudyTrials(studyID)
+                if err != nil {
+                    return err
+                }
+            }}
+            @trialScatterplot(trials, trialValues)
+        </div>
+    </div>
+}
+
+templ trialScatterplot(trials []db.Trial, trialValues []db.TrialValue) {
+    if len(trials) > 0 {
+        if chartHTML, err := createTrialScatterplot(trials, trialValues); err == nil {
+            <div id="trial-scatter-chart">
+                @templ.Raw(chartHTML)
+            </div>
+        } else {
+            <div class="alert alert-danger">
+                Failed to generate chart: {err.Error()}
+            </div>
+        }
+    } else {
+        <div class="alert alert-info">
+            No trial data available to display.
+        </div>
+    }
+}

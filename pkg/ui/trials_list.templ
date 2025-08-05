@@ -6,7 +6,7 @@ import (
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
 
-templ trialsListPage(studyID uint, trialAnchor int) {
+templ trialsListPage(studyID uint, highlightTrial int) {
     {{
         trials, trialValues, err := getStudyTrials(studyID)
         if err != nil {
@@ -21,13 +21,39 @@ templ trialsListPage(studyID uint, trialAnchor int) {
             @homeButton()
             <div class="container mt-4">
                 <h2>Trials for study { studyID }</h2>
-                @trialsList(trials, trialValues, trialAnchor)
+                @trialsList(trials, trialValues, highlightTrial)
             </div>
         </div>
     </body>
 }
 
-templ trialsList(trials []db.Trial, trialValues []db.TrialValue, trialAnchor int) {
+templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial int) {
+    <style>
+        /* Additional specificity to ensure override */
+        .table-striped > tbody > tr.trial-highlighted:nth-of-type(odd),
+        .table-striped > tbody > tr.trial-highlighted:nth-of-type(even) {
+            --bs-table-bg: #f8f9a3 !important;
+            --bs-table-striped-bg: #f8f9a3 !important;
+            --bs-table-accent-bg: #f8f9a3 !important;
+            background-color: #f8f9a3 !important;
+        }
+    </style>
+    
+    <script>
+        // Ensure highlighting is applied after the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const highlightTrial = {{highlightTrial}};
+            if (highlightTrial >= 0) {
+                const trialRow = document.getElementById(highlightTrial.toString());
+                if (trialRow) {
+                    trialRow.classList.add('trial-highlighted');
+                    // Scroll to the highlighted trial
+                    trialRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+    </script>
+    
     <table class="table table-striped">
         <thead>
             <tr>
@@ -41,12 +67,12 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, trialAnchor int
         <tbody>
             for _, trial := range trials {
                 {{
-                    style := ""
-                    if trialAnchor >= 0 && trialAnchor == int(trial.Number) {
-                        style = "background-color:#f8f900 !important;"
+                    trialClass := ""
+                    if highlightTrial >= 0 && highlightTrial == int(trial.Number) {
+                        trialClass = "trial-highlighted"
                     } 
                 }}
-                <tr id={strconv.Itoa(int(trial.Number))} style={style}>
+                <tr id={strconv.Itoa(int(trial.Number))} class={trialClass}>
                     <td>{strconv.Itoa(int(trial.Number))}</td>
                     <td>
                         switch trial.State {

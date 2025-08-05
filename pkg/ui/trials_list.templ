@@ -6,7 +6,7 @@ import (
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
 
-templ trialsListPage(studyID uint) {
+templ trialsListPage(studyID uint, trialAnchor int) {
     {{
         trials, trialValues, err := getStudyTrials(studyID)
         if err != nil {
@@ -21,13 +21,13 @@ templ trialsListPage(studyID uint) {
             @homeButton()
             <div class="container mt-4">
                 <h2>Trials for study { studyID }</h2>
-                @trialsList(trials, trialValues)
+                @trialsList(trials, trialValues, trialAnchor)
             </div>
         </div>
     </body>
 }
 
-templ trialsList(trials []db.Trial, trialValues []db.TrialValue) {
+templ trialsList(trials []db.Trial, trialValues []db.TrialValue, trialAnchor int) {
     <table class="table table-striped">
         <thead>
             <tr>
@@ -40,9 +40,26 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue) {
         </thead>
         <tbody>
             for _, trial := range trials {
-                <tr id={strconv.Itoa(int(trial.Number))}>
+                {{
+                    style := ""
+                    if trialAnchor >= 0 && trialAnchor == int(trial.Number) {
+                        style = "background-color:#f8f900 !important;"
+                    } 
+                }}
+                <tr id={strconv.Itoa(int(trial.Number))} style={style}>
                     <td>{strconv.Itoa(int(trial.Number))}</td>
-                    <td>{trial.State}</td>
+                    <td>
+                        switch trial.State {
+                        case "RUNNING":
+                            <span class="badge bg-primary">Running</span>
+                        case "FAIL":
+                            <span class="badge bg-danger">Failed</span>
+                        case "COMPLETE":
+                            <span class="badge bg-success">Complete</span>
+                        default:
+                            <span class="badge bg-secondary">{trial.State}</span>
+                        }
+                    </td>
                     <td>
                         for _, tv := range trialValues {
                             if tv.TrialID == trial.ID {

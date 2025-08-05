@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +35,12 @@ func SetupUIHandlers(app *fiber.App) {
 			return err
 		}
 
-		return templAdaptor(trialsListPage(uint(id)))(c)
+		anchorID, err := strconv.Atoi(c.Query("t", "-1"))
+		if err != nil {
+			return err
+		}
+
+		return templAdaptor(trialsListPage(uint(id), anchorID))(c)
 	})
 }
 

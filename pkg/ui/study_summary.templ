@@ -3,6 +3,7 @@ package ui
 import (
     "strconv"
     "errors"
+    "fmt"
 
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"encoding/json"
@@ -35,7 +36,9 @@ templ studySummaryPage(studyID uint) {
         <h2 class="mt-4">{ study.Name }</h2>
         <p>Direction: { studyDirection.Direction }</p>
         <div class="mt-4 border border-secondary rounded p-4">
-            <h3>Best trial: { bestTrial.Trial.Number }</h3>
+            <h3>Best trial: <a href={ fmt.Sprintf("/study/%d/trials?t=%d", studyID, bestTrial.Trial.Number) }>
+                { bestTrial.Trial.Number }
+            </a></h3>
             <p>Value: { bestTrial.TrialValue.Value }</p>
             @bestTrialParamsTable(bestTrial.TrialParams)
         </div>

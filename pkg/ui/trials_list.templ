@@ -2,6 +2,7 @@ package ui
 
 import (
     "strconv"
+    "fmt"
 
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
@@ -38,7 +39,7 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
             background-color: #f8f9a3 !important;
         }
     </style>
-    
+
     <script>
         // Ensure highlighting is applied after the page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -53,6 +54,13 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
             }
         });
     </script>
+
+    {{
+        attributes, err := db.GetUserAttributesList()
+        if err != nil {
+            return err
+        }
+    }}
     
     <table class="table table-striped">
         <thead>
@@ -62,6 +70,9 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
                 <th>Objective Value</th>
                 <th>Started</th>
                 <th>Completed</th>
+                for _, attr := range attributes {
+                    <th>{ attr }</th>
+                }
             </tr>
         </thead>
         <tbody>
@@ -70,10 +81,15 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
                     trialClass := ""
                     if highlightTrial >= 0 && highlightTrial == int(trial.Number) {
                         trialClass = "trial-highlighted"
-                    } 
+                    }
+
+                    userAttributes, err := db.GetTrialUserAttributes(trial.ID)
+                    if err != nil {
+                        return err
+                    }
                 }}
                 <tr id={strconv.Itoa(int(trial.Number))} class={trialClass}>
-                    <td>{strconv.Itoa(int(trial.Number))}</td>
+                    <td>{ strconv.Itoa(int(trial.Number)) }</td>
                     <td>
                         switch trial.State {
                         case "RUNNING":
@@ -89,12 +105,21 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
                     <td>
                         for _, tv := range trialValues {
                             if tv.TrialID == trial.ID {
-                                {strconv.FormatFloat(tv.Value, 'f', 6, 64)}
+                                { strconv.FormatFloat(tv.Value, 'f', 6, 64) }
                             }
                         }
                     </td>
                     <td>{trial.Start.Format("2006-01-02 15:04:05")}</td>
                     <td>{trial.Complete.Format("2006-01-02 15:04:05")}</td>
+                    for _, attr := range attributes {
+                        {{
+                            value := ""
+                            if val, ok := userAttributes[attr]; ok {
+                                value = fmt.Sprintf("%v", val)
+                            }
+                        }}
+                        <td>{ value }</td>
+                    }
                 </tr>
             }
         </tbody>

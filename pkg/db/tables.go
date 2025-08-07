@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -57,6 +58,13 @@ type TrialValue struct {
 	Objective uint    `gorm:"column:objective"`
 	Value     float64 `gorm:"column:value"`
 	Type      string  `gorm:"column:value_type"`
+}
+
+type TrialUserAttribute struct {
+	ID      uint   `gorm:"column:trial_user_attribute_id"`
+	TrialID uint   `gorm:"column:trial_id"`
+	Key     string `gorm:"column:key"`
+	Value   string `gorm:"column:value_json"`
 }
 
 // BestTrialResult represents the best trial with its parameters and value
@@ -121,4 +129,30 @@ func GetBestTrial(studyID uint) (*BestTrialResult, error) {
 		TrialParams: trialParams,
 		TrialValue:  bestTrialValue,
 	}, nil
+}
+
+func GetTrialUserAttributes(trialID uint) (map[string]any, error) {
+	var trialUserAttributes []TrialUserAttribute
+
+	if err := DB.Where("trial_id = ?", trialID).Find(&trialUserAttributes).Error; err != nil {
+		return nil, err
+	}
+
+	attributes := make(map[string]any, len(trialUserAttributes))
+	for _, attr := range trialUserAttributes {
+		var value any
+
+		if err := json.Unmarshal([]byte(attr.Value), &value); err != nil {
+			return nil, err
+		}
+
+		attributes[attr.Key] = value
+	}
+
+	return attributes, nil
+}
+
+func GetUserAttributesList() (attributes []string, err error) {
+	err = DB.Model(&TrialUserAttribute{}).Distinct("key").Pluck("key", &attributes).Error
+	return
 }

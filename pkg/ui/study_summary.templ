@@ -7,6 +7,7 @@ import (
 
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"encoding/json"
+	"time"
 )
 
 templ studySummaryPage(studyID uint) {
@@ -39,7 +40,10 @@ templ studySummaryPage(studyID uint) {
             <h3>Best trial: <a href={ fmt.Sprintf("/study/%d/trials?t=%d", studyID, bestTrial.Trial.Number) }>
                 { bestTrial.Trial.Number }
             </a></h3>
-            <p>Value: { bestTrial.TrialValue.Value }</p>
+            <p>
+                Value: { bestTrial.TrialValue.Value }<br/>
+                Runtime: { bestTrial.Trial.Complete.Sub(bestTrial.Trial.Start).Round(time.Second) }
+            </p>
             @bestTrialParamsTable(bestTrial.TrialParams)
         </div>
         @trialScatterplotWithLookup(studyID)

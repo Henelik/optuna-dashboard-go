@@ -42,6 +42,25 @@ func SetupUIHandlers(app *fiber.App) {
 
 		return templAdaptor(trialsListPage(uint(id), anchorID))(c)
 	})
+
+	app.Get("/study/:id/trials/:page", func(c *fiber.Ctx) error {
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return err
+		}
+
+		page, err := c.ParamsInt("page")
+		if err != nil {
+			return err
+		}
+
+		anchorID, err := strconv.Atoi(c.Query("t", "-1"))
+		if err != nil {
+			return err
+		}
+
+		return templAdaptor(getTrialsRows(uint(id), anchorID, page))(c)
+	})
 }
 
 func templAdaptor(component templ.Component) fiber.Handler {

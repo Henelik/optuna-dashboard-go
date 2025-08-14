@@ -44,13 +44,13 @@ func header(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 15, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 15, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr\" crossorigin=\"anonymous\"><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q\" crossorigin=\"anonymous\"></script><script src=\"https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js\"></script><script src=\"https://go-echarts.github.io/go-echarts-assets/assets/themes/westeros.js\"></script></head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr\" crossorigin=\"anonymous\"><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q\" crossorigin=\"anonymous\"></script><script src=\"https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js\"></script><script src=\"https://go-echarts.github.io/go-echarts-assets/assets/themes/westeros.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js\" integrity=\"sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm\" crossorigin=\"anonymous\"></script></head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -147,7 +147,7 @@ func clipboardItem(item any, buttonText string, classOptions ...string) templ.Co
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 49, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 49, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func clipboardItem(item any, buttonText string, classOptions ...string) templ.Co
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(buttonText)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 50, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/common.templ`, Line: 50, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -180,6 +180,29 @@ func getStudyTrials(studyID uint) ([]db.Trial, []db.TrialValue, error) {
 
 	if err := db.DB.Where("study_id = ?", studyID).
 		Order("number ASC").
+		Find(&trials).Error; err != nil {
+
+		return nil, nil, err
+	}
+
+	trialIDs := make([]uint, len(trials))
+	for i, trial := range trials {
+		trialIDs[i] = trial.ID
+	}
+
+	err := db.DB.Where("trial_id IN ?", trialIDs).Find(&trialValues).Error
+
+	return trials, trialValues, err
+}
+
+func getStudyTrialsPage(studyID uint, limit int, offset int) ([]db.Trial, []db.TrialValue, error) {
+	trials := []db.Trial{}
+	trialValues := []db.TrialValue{}
+
+	if err := db.DB.Where("study_id = ?", studyID).
+		Order("number ASC").
+		Limit(limit).
+		Offset(offset).
 		Find(&trials).Error; err != nil {
 
 		return nil, nil, err

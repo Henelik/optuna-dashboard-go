@@ -5,40 +5,36 @@ import "log"
 import "fmt"
 
 templ dashboard() {
-    @header("Optuna Dashboard")
-
-    <body>
-        <div class="container">
-            {{ 
-                studies := []db.Study{}
-                if err := db.DB.Find(&studies).Error; err != nil {
-                    log.Printf("Error fetching studies: %s", err.Error())
-                }
-            }}
-
-            @homeButton()
-
-            <div class="mt-4">
-                for _, study := range studies {
-                    {{
-                        studyDirections := []db.StudyDirection{}
-                        db.DB.Where("study_id = ?", study.ID).Find(&studyDirections)
-                    }}
-
-                    @studyCard(study, studyDirections)
-                }
-            </div>
-        </div>
-    </body>
+	@header("Optuna Dashboard")
+	<body>
+		<div class="container">
+			{{
+	studies := []db.Study{}
+	if err := db.DB.Find(&studies).Error; err != nil {
+		log.Printf("Error fetching studies: %s", err.Error())
+	}
+			}}
+			@homeButton()
+			<div class="mt-4">
+				for _, study := range studies {
+					{{
+	studyDirections := []db.StudyDirection{}
+	db.DB.Where("study_id = ?", study.ID).Find(&studyDirections)
+					}}
+					@studyCard(study, studyDirections)
+				}
+			</div>
+		</div>
+	</body>
 }
 
 templ studyCard(study db.Study, studyDirections []db.StudyDirection) {
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">{ study.ID }. <a href={ fmt.Sprintf("/study/%d", study.ID) }>{ study.Name }</a></h5>
-            for _, d := range studyDirections {
-                <p class="card-text">Objective { d.Objective } direction: { d.Direction }</p>
-            }
-        </div>
-    </div>
+	<div class="card mt-4">
+		<div class="card-body">
+			<h5 class="card-title">{ study.ID }. <a href={ fmt.Sprintf("/study/%d", study.ID) }>{ study.Name }</a></h5>
+			for _, d := range studyDirections {
+				<p class="card-text">Objective { d.Objective } direction: { d.Direction }</p>
+			}
+		</div>
+	</div>
 }

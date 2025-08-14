@@ -7,28 +7,33 @@ import (
     "github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
 
+const PAGE_LIMIT = 25
+
 templ trialsListPage(studyID uint, highlightTrial int) {
     {{
-        trials, trialValues, err := getStudyTrials(studyID)
+        study, err := getStudy(studyID)
         if err != nil {
             return err
         }
     }}
 
-    @header("Trials for study " + strconv.Itoa(int(studyID)))
+    @header(study.Name + " - Trials")
 
     <body>
         <div class="container">
             @homeButton()
             <div class="container mt-4">
-                <h2>Trials for study { studyID }</h2>
-                @trialsList(trials, trialValues, highlightTrial)
+                <h2>
+                    Trials for study 
+                    <a href={ fmt.Sprintf("/study/%d", studyID) }>{ study.Name }</a>
+                </h2>
+                @trialsList(studyID, highlightTrial)
             </div>
         </div>
     </body>
 }
 
-templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial int) {
+templ trialsList(studyID uint, highlightTrial int) {
     <style>
         /* Additional specificity to ensure override */
         .table-striped > tbody > tr.trial-highlighted:nth-of-type(odd),
@@ -76,52 +81,72 @@ templ trialsList(trials []db.Trial, trialValues []db.TrialValue, highlightTrial 
             </tr>
         </thead>
         <tbody>
-            for _, trial := range trials {
-                {{
-                    trialClass := ""
-                    if highlightTrial >= 0 && highlightTrial == int(trial.Number) {
-                        trialClass = "trial-highlighted"
-                    }
-
-                    userAttributes, err := db.GetTrialUserAttributes(trial.ID)
-                    if err != nil {
-                        return err
-                    }
-                }}
-                <tr id={strconv.Itoa(int(trial.Number))} class={trialClass}>
-                    <td>{ strconv.Itoa(int(trial.Number)) }</td>
-                    <td>
-                        switch trial.State {
-                        case "RUNNING":
-                            <span class="badge bg-primary">Running</span>
-                        case "FAIL":
-                            <span class="badge bg-danger">Failed</span>
-                        case "COMPLETE":
-                            <span class="badge bg-success">Complete</span>
-                        default:
-                            <span class="badge bg-secondary">{trial.State}</span>
-                        }
-                    </td>
-                    <td>
-                        for _, tv := range trialValues {
-                            if tv.TrialID == trial.ID {
-                                { strconv.FormatFloat(tv.Value, 'f', 6, 64) }
-                            }
-                        }
-                    </td>
-                    <td>{trial.Start.Format("2006-01-02 15:04:05")}</td>
-                    <td>{trial.Complete.Format("2006-01-02 15:04:05")}</td>
-                    for _, attr := range attributes {
-                        {{
-                            value := ""
-                            if val, ok := userAttributes[attr]; ok {
-                                value = fmt.Sprintf("%v", val)
-                            }
-                        }}
-                        <td>{ value }</td>
-                    }
-                </tr>
-            }
+            @getTrialsRows(studyID, highlightTrial, 0)
         </tbody>
     </table>
+}
+
+templ getTrialsRows(studyID uint, highlightTrial int, page int) {
+    {{
+        trials, trialValues, err := getStudyTrialsPage(studyID, PAGE_LIMIT, page*PAGE_LIMIT)
+        if err != nil {
+            return err
+        }
+
+        attributes, err := db.GetUserAttributesList()
+        if err != nil {
+            return err
+        }
+    }}
+
+    for i, trial := range trials {
+        {{
+            userAttributes, err := db.GetTrialUserAttributes(trial.ID)
+            if err != nil {
+                return err
+            }
+        }}
+        <tr id={strconv.Itoa(int(trial.Number))}
+            if highlightTrial >= 0 && highlightTrial == int(trial.Number) {
+                class="trial-highlighted"
+            }
+            if i == PAGE_LIMIT-1 {
+                hx-get={ fmt.Sprintf("/study/%d/trials/%d", studyID, page+1) }
+                hx-trigger="revealed"
+                hx-swap="afterend"
+            }
+        >
+            <td>{ strconv.Itoa(int(trial.Number)) }</td>
+            <td>
+                switch trial.State {
+                case "RUNNING":
+                    <span class="badge bg-primary">Running</span>
+                case "FAIL":
+                    <span class="badge bg-danger">Failed</span>
+                case "COMPLETE":
+                    <span class="badge bg-success">Complete</span>
+                default:
+                    <span class="badge bg-secondary">{ trial.State }</span>
+                }
+            </td>
+            <td>
+                for _, tv := range trialValues {
+                    if tv.TrialID == trial.ID {
+                        { strconv.FormatFloat(tv.Value, 'f', 6, 64) }
+                    }
+                }
+            </td>
+            <td>{ trial.Start.Format("2006-01-02 15:04:05") }</td>
+            <td>{ trial.Complete.Format("2006-01-02 15:04:05") }</td>
+            for _, attr := range attributes {
+                {{
+                    value := ""
+                    if val, ok := userAttributes[attr]; ok {
+                        value = fmt.Sprintf("%v", val)
+                    }
+                }}
+                <td>{ value }</td>
+            }
+        </tr>
+    }
 }

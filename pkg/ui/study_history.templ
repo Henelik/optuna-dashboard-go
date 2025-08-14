@@ -1,131 +1,130 @@
 package ui
 
 import (
-    "fmt"
-    "strings"
-    "strconv"
+	"fmt"
+	"strconv"
+	"strings"
 
-    "github.com/go-echarts/go-echarts/v2/charts"
-    "github.com/go-echarts/go-echarts/v2/opts"
-    "github.com/go-echarts/go-echarts/v2/types"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 
-    "github.com/Henelik/optuna-dashboard-go/pkg/db"
+	"github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"github.com/go-echarts/go-echarts/v2/event"
 )
 
 // createTrialScatterplot generates a scatterplot of trial objective values
 func createTrialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) (string, error) {
-    // Create a new scatter instance
-    scatter := charts.NewScatter()
-    
-    // Group trial values by trial number
-    trialValueMap := make(map[uint]float64)
-    for _, tv := range trialValues {
-        trialValueMap[tv.TrialID] = tv.Value
-    }
-    
-    // Prepare data for the scatter plot
-    xAxis := make([]uint, len(trials))
-    data := make([]opts.ScatterData, len(trials))
-    
-    for i, trial := range trials {
-        if val, ok := trialValueMap[trial.ID]; ok {
-            xAxis[i] = trial.Number
-            data[i] = opts.ScatterData{
-                Value:        val,
-                SymbolSize:   3,
-                Name:         "Trial " + strconv.Itoa(int(trial.Number)),
-            }
-        }
-    }
-    
-    // Convert xAxis to string for the chart
-    xAxisStr := make([]string, len(xAxis))
-    for i, x := range xAxis {
-        xAxisStr[i] = strconv.Itoa(int(x))
-    }
-    
-    // Set chart options
-    scatter.SetGlobalOptions(
-        charts.WithTitleOpts(opts.Title{
-            Title:    "Trial Objective Values",
-            Subtitle: "Objective value for each trial",
-        }),
-        charts.WithTooltipOpts(opts.Tooltip{
-            Show:    opts.Bool(true),
-            Trigger: "item",
-            TriggerOn: "mousemove|click",
-            Formatter: "{a} <br/>{b}: {c}",
-        }),
-        charts.WithInitializationOpts(opts.Initialization{
-            Theme: types.ThemeWesteros,
-        }),
-        charts.WithEventListeners(
-            event.Listener{
-                EventName: "click",
-                Handler: types.FuncStr(
-                    fmt.Sprintf("(params) => window.location.href=`/study/%d/trials?t=${params.dataIndex}`", studyID),
-                ),
-            },
-        ),
-    )
-    
-    // Add data to chart
-    scatter.SetXAxis(xAxisStr).
-        AddSeries("Objective Value", data)
+	// Create a new scatter instance
+	scatter := charts.NewScatter()
 
-    // render the snippet
-    chartSnippet := scatter.RenderSnippet()
-    elementID := strings.Split(chartSnippet.Element, `"`)[5]
+	// Group trial values by trial number
+	trialValueMap := make(map[uint]float64)
+	for _, tv := range trialValues {
+		trialValueMap[tv.TrialID] = tv.Value
+	}
 
-    element := fmt.Sprintf(
-    `<div class="container border border-dark rounded mt-4">
+	// Prepare data for the scatter plot
+	xAxis := make([]uint, len(trials))
+	data := make([]opts.ScatterData, len(trials))
+
+	for i, trial := range trials {
+		if val, ok := trialValueMap[trial.ID]; ok {
+			xAxis[i] = trial.Number
+			data[i] = opts.ScatterData{
+				Value:      val,
+				SymbolSize: 3,
+				Name:       "Trial " + strconv.Itoa(int(trial.Number)),
+			}
+		}
+	}
+
+	// Convert xAxis to string for the chart
+	xAxisStr := make([]string, len(xAxis))
+	for i, x := range xAxis {
+		xAxisStr[i] = strconv.Itoa(int(x))
+	}
+
+	// Set chart options
+	scatter.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    "Trial Objective Values",
+			Subtitle: "Objective value for each trial",
+		}),
+		charts.WithTooltipOpts(opts.Tooltip{
+			Show:      opts.Bool(true),
+			Trigger:   "item",
+			TriggerOn: "mousemove|click",
+			Formatter: "{a} <br/>{b}: {c}",
+		}),
+		charts.WithInitializationOpts(opts.Initialization{
+			Theme: types.ThemeWesteros,
+		}),
+		charts.WithEventListeners(
+			event.Listener{
+				EventName: "click",
+				Handler: types.FuncStr(
+					fmt.Sprintf("(params) => window.location.href=`/study/%d/trials?t=${params.dataIndex}`", studyID),
+				),
+			},
+		),
+	)
+
+	// Add data to chart
+	scatter.SetXAxis(xAxisStr).
+		AddSeries("Objective Value", data)
+
+	// render the snippet
+	chartSnippet := scatter.RenderSnippet()
+	elementID := strings.Split(chartSnippet.Element, `"`)[5]
+
+	element := fmt.Sprintf(
+		`<div class="container border border-dark rounded mt-4">
         <div class="item m-3" id="%s" style="height:700px;"></div>
     </div>`, elementID)
-    
-    return element + chartSnippet.Script, nil
+
+	return element + chartSnippet.Script, nil
 }
 
 templ studyHistory(studyID uint) {
-    @header("Study History")
-    <div class="container mt-4">
-        @homeButton()
-        <h1>Study History - ID: {strconv.FormatUint(uint64(studyID), 10)}</h1>
-        <div id="scatter-container" class="mt-4">
-            {{
-                trials, trialValues, err := getStudyTrials(studyID)
-                if err != nil {
-                    return err
-                }
-            }}
-            @trialScatterplot(studyID, trials, trialValues)
-        </div>
-    </div>
+	@header("Study History")
+	<div class="container mt-4">
+		@homeButton()
+		<h1>Study History - ID: { strconv.FormatUint(uint64(studyID), 10) }</h1>
+		<div id="scatter-container" class="mt-4">
+			{{
+	trials, trialValues, err := getStudyTrials(studyID)
+	if err != nil {
+		return err
+	}
+			}}
+			@trialScatterplot(studyID, trials, trialValues)
+		</div>
+	</div>
 }
 
 templ trialScatterplotWithLookup(studyID uint) {
-    {{
-        trials, trialValues, err := getStudyTrials(studyID)
-        if err != nil {
-            return err
-        }
-    }}
-
-    @trialScatterplot(studyID, trials, trialValues)
+	{{
+	trials, trialValues, err := getStudyTrials(studyID)
+	if err != nil {
+		return err
+	}
+	}}
+	@trialScatterplot(studyID, trials, trialValues)
 }
 
 templ trialScatterplot(studyID uint, trials []db.Trial, trialValues []db.TrialValue) {
-    if len(trials) > 0 {
-        if chartHTML, err := createTrialScatterplot(studyID, trials, trialValues); err == nil {
-            @templ.Raw(chartHTML)
-        } else {
-            <div class="alert alert-danger">
-                Failed to generate chart: {err.Error()}
-            </div>
-        }
-    } else {
-        <div class="alert alert-info">
-            No trial data available to display.
-        </div>
-    }
+	if len(trials) > 0 {
+		if chartHTML, err := createTrialScatterplot(studyID, trials, trialValues); err == nil {
+			@templ.Raw(chartHTML)
+		} else {
+			<div class="alert alert-danger">
+				Failed to generate chart: { err.Error() }
+			</div>
+		}
+	} else {
+		<div class="alert alert-info">
+			No trial data available to display.
+		</div>
+	}
 }

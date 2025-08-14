@@ -1,20 +1,19 @@
 package ui
 
 import (
-    "strconv"
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
+	"strconv"
 
-    "github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"encoding/json"
+	"github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"time"
 )
 
 templ studySummaryPage(studyID uint) {
-    @header("Study Summary")
-
-    <div class="container">
-        {{
+	@header("Study Summary")
+	<div class="container">
+		{{
             // get the study
             study, err := getStudy(studyID)
             if err != nil {
@@ -31,27 +30,30 @@ templ studySummaryPage(studyID uint) {
             if err != nil {
                 return err
             }
-        }}
-
-        @homeButton()
-        <h2 class="mt-4">{ study.Name }</h2>
-        <p>Direction: { studyDirection.Direction }</p>
-        <div class="mt-4 border border-secondary rounded p-4">
-            <h3>Best trial: <a href={ fmt.Sprintf("/study/%d/trials?t=%d", studyID, bestTrial.Trial.Number) }>
-                { bestTrial.Trial.Number }
-            </a></h3>
-            <p>
-                Value: { bestTrial.TrialValue.Value }<br/>
-                Runtime: { bestTrial.Trial.Complete.Sub(bestTrial.Trial.Start).Round(time.Second) }
-            </p>
-            @bestTrialParamsTable(bestTrial.TrialParams)
-        </div>
-        @trialScatterplotWithLookup(studyID)
-    </div>
+		}}
+		@homeButton()
+		<h2 class="mt-4">{ study.Name }</h2>
+		<p>Direction: { studyDirection.Direction }</p>
+		<div class="mt-4 border border-secondary rounded p-4">
+			<h3>
+				Best trial: 
+				<a href={ fmt.Sprintf("/study/%d/trials?t=%d", studyID, bestTrial.Trial.Number) }>
+					{ bestTrial.Trial.Number }
+				</a>
+			</h3>
+			<p>
+				Value: { bestTrial.TrialValue.Value }
+				<br/>
+				Runtime: { bestTrial.Trial.Complete.Sub(bestTrial.Trial.Start).Round(time.Second) }
+			</p>
+			@bestTrialParamsTable(bestTrial.TrialParams)
+		</div>
+		@trialScatterplotWithLookup(studyID)
+	</div>
 }
 
 templ bestTrialParamsTable(params []db.TrialParam) {
-    {{
+	{{
         paramsMap := make(map[string]any, len(params))
         for _, param := range params {
             distribution := db.Distribution{}
@@ -84,23 +86,22 @@ templ bestTrialParamsTable(params []db.TrialParam) {
                 paramsMap[param.Name] = distribution.Attributes.Choices[index]
             }
         }
-    }}
-
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-               <th>Param Name</th>
-               <th>Param Value</th>
-               @clipboardItem(paramsMap, "Copy params JSON", "me-auto")
-            </tr>
-        </thead>
-        <tbody>
-            for _, param := range params {
-                <tr>
-                   <td>{ param.Name }</td>
-                   <td>{ param.Value }</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+	}}
+	<table class="table table-striped mt-4">
+		<thead>
+			<tr>
+				<th>Param Name</th>
+				<th>Param Value</th>
+				@clipboardItem(paramsMap, "Copy params JSON", "me-auto")
+			</tr>
+		</thead>
+		<tbody>
+			for _, param := range params {
+				<tr>
+					<td>{ param.Name }</td>
+					<td>{ param.Value }</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }

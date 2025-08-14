@@ -81,12 +81,14 @@ templ trialsList(studyID uint, highlightTrial int) {
             </tr>
         </thead>
         <tbody>
-            @getTrialsRows(studyID, highlightTrial, 0)
+            for i := 0; i <= highlightTrial / PAGE_LIMIT; i++ {
+                @getTrialsRows(studyID, highlightTrial, i, i == highlightTrial / PAGE_LIMIT)
+            }
         </tbody>
     </table>
 }
 
-templ getTrialsRows(studyID uint, highlightTrial int, page int) {
+templ getTrialsRows(studyID uint, highlightTrial int, page int, listEnd bool) {
     {{
         trials, trialValues, err := getStudyTrialsPage(studyID, PAGE_LIMIT, page*PAGE_LIMIT)
         if err != nil {
@@ -110,7 +112,7 @@ templ getTrialsRows(studyID uint, highlightTrial int, page int) {
             if highlightTrial >= 0 && highlightTrial == int(trial.Number) {
                 class="trial-highlighted"
             }
-            if i == PAGE_LIMIT-1 {
+            if listEnd &&  i == PAGE_LIMIT-1 {
                 hx-get={ fmt.Sprintf("/study/%d/trials/%d?t=%d", studyID, page+1, highlightTrial) }
                 hx-trigger="revealed"
                 hx-swap="afterend"

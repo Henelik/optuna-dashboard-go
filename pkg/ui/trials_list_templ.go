@@ -166,9 +166,11 @@ func trialsList(studyID uint, highlightTrial int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = getTrialsRows(studyID, highlightTrial, 0).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		for i := 0; i <= highlightTrial/PAGE_LIMIT; i++ {
+			templ_7745c5c3_Err = getTrialsRows(studyID, highlightTrial, i, i == highlightTrial/PAGE_LIMIT).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</tbody></table>")
 		if templ_7745c5c3_Err != nil {
@@ -178,7 +180,7 @@ func trialsList(studyID uint, highlightTrial int) templ.Component {
 	})
 }
 
-func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
+func getTrialsRows(studyID uint, highlightTrial int, page int, listEnd bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -222,7 +224,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(int(trial.Number)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 109, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 111, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -238,7 +240,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			if i == PAGE_LIMIT-1 {
+			if listEnd && i == PAGE_LIMIT-1 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " hx-get=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -246,7 +248,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/study/%d/trials/%d?t=%d", studyID, page+1, highlightTrial))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 114, Col: 97}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 116, Col: 97}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -264,7 +266,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(int(trial.Number)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 119, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 121, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -298,7 +300,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(trial.State)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 129, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 131, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -318,7 +320,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatFloat(tv.Value, 'f', 6, 64))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 135, Col: 67}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 137, Col: 67}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -333,7 +335,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(trial.Start.Format("2006-01-02 15:04:05"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 139, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 141, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -346,7 +348,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(trial.Complete.Format("2006-01-02 15:04:05"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 140, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 142, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -369,7 +371,7 @@ func getTrialsRows(studyID uint, highlightTrial int, page int) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 148, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/ui/trials_list.templ`, Line: 150, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {

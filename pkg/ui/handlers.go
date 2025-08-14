@@ -61,7 +61,7 @@ func SetupUIHandlers(app *fiber.App) {
 			return err
 		}
 
-		return templAdaptor(getTrialsRows(uint(id), anchorID, page))(c)
+		return templAdaptor(getTrialsRows(uint(id), anchorID, page, true))(c)
 	})
 
 	app.Delete("/study/:id", func(c *fiber.Ctx) error {

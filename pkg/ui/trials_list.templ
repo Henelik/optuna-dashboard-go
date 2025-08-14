@@ -111,7 +111,7 @@ templ getTrialsRows(studyID uint, highlightTrial int, page int) {
                 class="trial-highlighted"
             }
             if i == PAGE_LIMIT-1 {
-                hx-get={ fmt.Sprintf("/study/%d/trials/%d", studyID, page+1) }
+                hx-get={ fmt.Sprintf("/study/%d/trials/%d?t=%d", studyID, page+1, highlightTrial) }
                 hx-trigger="revealed"
                 hx-swap="afterend"
             }

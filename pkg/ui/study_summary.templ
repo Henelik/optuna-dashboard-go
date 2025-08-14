@@ -32,7 +32,11 @@ templ studySummaryPage(studyID uint) {
             }
 		}}
 		@homeButton()
-		<h2 class="mt-4">{ study.Name }</h2>
+        <div class="mt-4 d-flex justify-content-between">
+		    <h2>{ study.Name }</h2>
+            <button class="btn btn-danger" hx-delete={ fmt.Sprintf("/study/%d", studyID) }>Delete Study</button>
+        </div>
+
 		<p>Direction: { studyDirection.Direction }</p>
 		<div class="mt-4 border border-secondary rounded p-4">
 			<h3>

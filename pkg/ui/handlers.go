@@ -4,8 +4,10 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/Henelik/optuna-dashboard-go/pkg/db"
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func SetupUIHandlers(app *fiber.App) {
@@ -60,6 +62,23 @@ func SetupUIHandlers(app *fiber.App) {
 		}
 
 		return templAdaptor(getTrialsRows(uint(id), anchorID, page))(c)
+	})
+
+	app.Delete("/study/:id", func(c *fiber.Ctx) error {
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return err
+		}
+
+		if err := db.DB.Transaction(func(tx *gorm.DB) error {
+			return db.DeleteStudy(uint(id), tx)
+		}); err != nil {
+			return err
+		}
+
+		c.Response().Header.Add("hx-redirect", "/")
+
+		return c.SendStatus(fiber.StatusOK)
 	})
 }
 

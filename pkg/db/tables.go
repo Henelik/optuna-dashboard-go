@@ -67,11 +67,73 @@ type TrialUserAttribute struct {
 	Value   string `gorm:"column:value_json"`
 }
 
+type TrialIntermediateValue struct {
+	ID      uint    `gorm:"column:trial_intermediate_value_id"`
+	TrialID uint    `gorm:"column:trial_id"`
+	Step    int     `gorm:"column:step"`
+	Value   float64 `gorm:"column:intermediate_value"`
+	Type    string  `gorm:"column:intermediate_value_type"`
+}
+
+type TrialHeartbeat struct {
+	ID      uint      `gorm:"column:trial_heartbeat_id"`
+	TrialID uint      `gorm:"column:trial_id"`
+	Time    time.Time `gorm:"column:heartbeat"`
+}
+
+type TrialSystemAttribute struct {
+	ID      uint   `gorm:"column:trial_system_attribute_id"`
+	TrialID uint   `gorm:"column:trial_id"`
+	Key     string `gorm:"column:key"`
+	Value   string `gorm:"column:value_json"`
+}
+
 // BestTrialResult represents the best trial with its parameters and value
 type BestTrialResult struct {
 	Trial       Trial
 	TrialParams []TrialParam
 	TrialValue  TrialValue
+}
+
+func DeleteStudy(studyID uint, tx *gorm.DB) error {
+	// delete the study directions
+	if err := tx.Where("study_id = ?", studyID).Delete(&StudyDirection{}).Error; err != nil {
+		return err
+	}
+
+	// delete the study trials
+	trialIDs := []uint{}
+
+	if err := tx.Model(&Trial{}).Where("study_id = ?", studyID).Pluck("trial_id", &trialIDs).Error; err != nil {
+		return err
+	}
+
+	for _, id := range trialIDs {
+		if err := DeleteTrial(id, tx); err != nil {
+			return err
+		}
+	}
+
+	// delete the study
+	return tx.Delete(&Study{}, studyID).Error
+}
+
+func DeleteTrial(trialID uint, tx *gorm.DB) error {
+	for _, model := range []any{
+		&TrialSystemAttribute{},
+		&TrialUserAttribute{},
+		&TrialValue{},
+		&TrialParam{},
+		&TrialIntermediateValue{},
+		&TrialHeartbeat{},
+	} {
+		if err := tx.Where("trial_id = ?", trialID).Delete(model).Error; err != nil {
+			return err
+		}
+	}
+
+	// delete the trial
+	return tx.Delete(&Trial{}, trialID).Error
 }
 
 // GetBestTrial finds and returns the best trial for a given study ID,

@@ -15,7 +15,7 @@ import (
 	"github.com/Henelik/optuna-dashboard-go/pkg/db"
 )
 
-const PAGE_LIMIT = 10
+const PAGE_LIMIT = 25
 
 func trialsListPage(studyID uint, highlightTrial int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
